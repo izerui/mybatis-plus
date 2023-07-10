@@ -49,6 +49,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.UnknownTypeHandler;
+import org.springframework.data.domain.Page;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -402,7 +403,7 @@ public class MybatisMapperAnnotationBuilder extends MapperAnnotationBuilder {
         return parameterType;
     }
 
-    private Class<?> getReturnType(Method method) {
+    protected Class<?> getReturnType(Method method) {
         Class<?> returnType = method.getReturnType();
         Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, type);
         if (resolvedReturnType instanceof Class) {
@@ -462,6 +463,14 @@ public class MybatisMapperAnnotationBuilder extends MapperAnnotationBuilder {
                     returnType = (Class<?>) returnTypeParameter;
                 } else if (returnTypeParameter instanceof ParameterizedType) {
                     returnType = (Class<?>) ((ParameterizedType) returnTypeParameter).getRawType();
+                }
+            } else if (Page.class.isAssignableFrom(rawType)) { // 支持spring-data-commns的PageImpl返回值
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                Type returnTypeParameter = actualTypeArguments[0];
+                if (returnTypeParameter instanceof Class) {
+                    return (Class) returnTypeParameter;
+                } else if (returnTypeParameter instanceof ParameterizedType) {
+                    return (Class) ((ParameterizedType) returnTypeParameter).getRawType();
                 }
             }
             // TODO 上面是支援 IPage 及其子类作为返回值的

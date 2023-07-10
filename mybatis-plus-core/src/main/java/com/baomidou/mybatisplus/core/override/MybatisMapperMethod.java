@@ -21,11 +21,15 @@ import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.StatementType;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -43,6 +47,9 @@ import java.util.Optional;
  * @since 2018-06-09
  */
 public class MybatisMapperMethod {
+
+    private final static ThreadLocal<Long> COUNT_THREAD_LOCAL = new ThreadLocal<>();
+
     private final MapperMethod.SqlCommand command;
     private final MapperMethod.MethodSignature method;
 
@@ -52,7 +59,7 @@ public class MybatisMapperMethod {
     }
 
     public Object execute(SqlSession sqlSession, Object[] args) {
-        Object result;
+        Object result = null;
         switch (command.getType()) {
             case INSERT: {
                 Object param = method.convertArgsToSqlCommandParam(args);
@@ -83,6 +90,8 @@ public class MybatisMapperMethod {
                     // TODO 这里下面改了
                     if (IPage.class.isAssignableFrom(method.getReturnType())) {
                         result = executeForIPage(sqlSession, args);
+                    } else if (Page.class.isAssignableFrom(method.getReturnType())) {
+                        result = executeForPage(sqlSession, args);
                         // TODO 这里上面改了
                     } else {
                         Object param = method.convertArgsToSqlCommandParam(args);
@@ -121,6 +130,33 @@ public class MybatisMapperMethod {
         List<E> list = sqlSession.selectList(command.getName(), param);
         result.setRecords(list);
         return result;
+    }
+
+    private <E> Object executeForPage(SqlSession sqlSession, Object[] args) {
+        PageRequest request = null;
+        for (Object arg : args) {
+            if (arg instanceof PageRequest) {
+                request = (PageRequest) arg;
+                break;
+            }
+        }
+        Assert.notNull(request, "can't found PageRequest for args!");
+        Object param = method.convertArgsToSqlCommandParam(args);
+        // 这里会通过代理执行mybatis拦截器
+        List<E> list = sqlSession.selectList(command.getName(), param);
+        return new PageImpl<>(list, request, getCountFromLocalThread());
+    }
+
+    public static long getCountFromLocalThread() {
+        Long count = COUNT_THREAD_LOCAL.get();
+        if (count == null) {
+            count = 0L;
+        }
+        return count;
+    }
+
+    public static void setCountToLocalThread(long value) {
+        COUNT_THREAD_LOCAL.set(value);
     }
 
     private Object rowCountResult(int rowCount) {

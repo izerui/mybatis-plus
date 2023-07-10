@@ -20,8 +20,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.exceptions.TooManyResultsException;
+import org.springframework.data.domain.*;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -235,4 +237,24 @@ public interface BaseMapper<T> extends Mapper<T> {
      * @param queryWrapper 实体对象封装操作类
      */
     <P extends IPage<Map<String, Object>>> P selectMapsPage(P page, @Param(Constants.WRAPPER) Wrapper<T> queryWrapper);
+
+    /**
+     * 分页方法执行器: {@link com.baomidou.mybatisplus.core.override.MybatisMapperMethod#execute->executeForPage}
+     * 其他修改:
+     * {@link com.baomidou.mybatisplus.core.MybatisMapperAnnotationBuilder#getReturnType}
+     * {@link com.baomidou.mybatisplus.extension.plugins.inner.DataPaginationInnerInterceptor}
+     * 根据 Wrapper 条件，查询全部记录（并翻页）
+     *
+     * @param pageRequest         分页查询条件
+     * @param queryWrapper 实体对象封装操作类
+     */
+    Page<T> selectPage(PageRequest pageRequest, @Param(Constants.WRAPPER) Wrapper<T> queryWrapper);
+
+    /**
+     * 根据 Wrapper 条件，查询全部记录（并翻页）
+     *
+     * @param pageRequest         分页查询条件
+     * @param queryWrapper 实体对象封装操作类
+     */
+    Page<Map<String, Object>> selectMapsPage(PageRequest pageRequest, @Param(Constants.WRAPPER) Wrapper<T> queryWrapper);
 }
