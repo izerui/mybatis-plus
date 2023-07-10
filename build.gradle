@@ -2,7 +2,7 @@ import java.time.LocalDateTime
 
 allprojects {
     group = 'com.baomidou'
-    version = "3.5.3.1"
+    version = "3.5.3.2-SNAPSHOT"
 }
 
 ext {
@@ -193,15 +193,18 @@ subprojects {
     publishing {
         repositories {
             maven {
-                def userName = System.getProperty("un")
-                def passWord = System.getProperty("ps")
-                def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-                def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                allowInsecureProtocol = true
+//                def userName = System.getProperty("un")
+//                def passWord = System.getProperty("ps")
+//                def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+//                def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+                def releasesRepoUrl = "http://192.168.1.235:8081/nexus/content/repositories/releases/"
+                def snapshotsRepoUrl = "http://192.168.1.235:8081/nexus/content/repositories/snapshots/"
                 url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
 
                 credentials {
-                    username userName
-                    password passWord
+                    username 'liuyuhua'
+                    password '1234567l'
                 }
             }
         }
@@ -211,7 +214,7 @@ subprojects {
                 from components.java
 
                 artifact sourcesJar
-                artifact javadocJar
+//                artifact javadocJar
 
                 pom {
                     name = 'mybatis-plus'
