@@ -70,10 +70,10 @@ public interface IPage<T> extends Serializable {
      */
     default long offset() {
         long current = getCurrent();
-        if (current <= 1L) {
+        if (current <= 0L) {
             return 0L;
         }
-        return Math.max((current - 1) * getSize(), 0L);
+        return Math.max(current * getSize(), 0L);
     }
 
     /**
