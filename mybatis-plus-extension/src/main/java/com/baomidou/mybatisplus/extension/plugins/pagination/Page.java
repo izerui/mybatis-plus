@@ -52,7 +52,7 @@ public class Page<T> implements IPage<T> {
     /**
      * 当前页
      */
-    protected long current = 1;
+    protected long current = 0;
 
     /**
      * 排序字段信息
